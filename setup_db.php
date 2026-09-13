@@ -14,53 +14,62 @@ if (!$conn) {
     die("Database Connection Failed: " . mysqli_connect_error());
 }
 
-// Session Primary Key restriction fix for Aiven
 mysqli_query($conn, "SET SESSION sql_require_primary_key = 0;");
 
-// 1. Users Table (MLM / Parent Tracking & Wallet)
-$table_users = "CREATE TABLE IF NOT EXISTS users (
+// 1. Questions Table
+$table_questions = "CREATE TABLE IF NOT EXISTS questions (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    phone VARCHAR(15) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    wallet_balance DECIMAL(10,2) DEFAULT 0.00,
-    referral_code VARCHAR(20) UNIQUE NOT NULL,
-    parent_id INT DEFAULT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (parent_id) REFERENCES users(id) ON DELETE SET NULL
+    question_text TEXT NOT NULL,
+    option_a VARCHAR(255) NOT NULL,
+    option_b VARCHAR(255) NOT NULL,
+    option_c VARCHAR(255) NOT NULL,
+    option_d VARCHAR(255) NOT NULL,
+    correct_option CHAR(1) NOT NULL,
+    category VARCHAR(50) DEFAULT 'GK'
 );";
 
-// 2. Network / MLM Commission Logs
-$table_mlm = "CREATE TABLE IF NOT EXISTS network_commissions (
+// 2. Contests Table (Game Rooms)
+$table_contests = "CREATE TABLE IF NOT EXISTS contests (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    leader_id INT NOT NULL,
-    player_id INT NOT NULL,
+    title VARCHAR(100) NOT NULL,
+    entry_fee DECIMAL(10,2) NOT NULL,
+    prize_pool DECIMAL(10,2) NOT NULL,
+    admin_profit DECIMAL(10,2) NOT NULL,
+    status ENUM('active', 'completed') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);";
+
+// 3. Contest Participants Log & Score Tracker
+$table_participants = "CREATE TABLE IF NOT EXISTS contest_participants (
+    id INT AUTO_INCREMENT PRIMARY KEY,
     contest_id INT NOT NULL,
-    commission_amount DECIMAL(10,2) NOT NULL,
-    level_type INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);";
-
-// 3. Transactions Table (Recharge & Withdrawals)
-$table_transactions = "CREATE TABLE IF NOT EXISTS transactions (
-    id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    amount DECIMAL(10,2) NOT NULL,
-    type ENUM('credit', 'debit') NOT NULL,
-    description VARCHAR(255) NOT NULL,
+    score INT DEFAULT 0,
+    completion_time_sec DECIMAL(5,2) DEFAULT 99.99,
+    status ENUM('played', 'pending') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );";
 
-echo "<h2>Database Setup for TC Game Portal</h2>";
+echo "<h2>Executing Database Updates...</h2>";
+if (mysqli_query($conn, $table_questions)) echo "✅ 'questions' table ready.<br>";
+if (mysqli_query($conn, $table_contests)) echo "✅ 'contests' table ready.<br>";
+if (mysqli_query($conn, $table_participants)) echo "✅ 'participants' table ready.<br>";
 
-if (mysqli_query($conn, $table_users)) {
-    echo "✅ 'users' table created successfully.<br>";
+// Insert Sample Demo Contest & Questions if Empty
+$check_q = mysqli_query($conn, "SELECT id FROM questions LIMIT 1");
+if (mysqli_num_rows($check_q) == 0) {
+    mysqli_query($conn, "INSERT INTO questions (question_text, option_a, option_b, option_c, option_d, correct_option) VALUES 
+    ('मध्य प्रदेश की राजधानी कहाँ है?', 'इंदौर', 'भोपाल', 'जबलपुर', 'ग्वालियर', 'B'),
+    ('कंप्यूटर का मस्तिष्क किसे कहा जाता है?', 'RAM', 'Hard Disk', 'CPU', 'Monitor', 'C'),
+    ('भारत का राष्ट्रीय खेल कौन सा है?', 'क्रिकेट', 'हॉकी', 'फुटबॉल', 'कबड्डी', 'B')");
+    echo "✅ Sample questions added.<br>";
 }
-if (mysqli_query($conn, $table_mlm)) {
-    echo "✅ 'network_commissions' table created successfully.<br>";
-}
-if (mysqli_query($conn, $table_transactions)) {
-    echo "✅ 'transactions' table created successfully.<br>";
+
+$check_c = mysqli_query($conn, "SELECT id FROM contests LIMIT 1");
+if (mysqli_num_rows($check_c) == 0) {
+    // ₹20 Entry Fee -> ₹10 Prize (50%), ₹7 Admin (35%), ₹3 Commission (15%)
+    mysqli_query($conn, "INSERT INTO contests (title, entry_fee, prize_pool, admin_profit) VALUES ('Rapid Skill Challenge', 20.00, 10.00, 7.00)");
+    echo "✅ Sample contest added.<br>";
 }
 
 mysqli_close($conn);

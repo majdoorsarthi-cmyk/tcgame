@@ -370,7 +370,7 @@ $active_tab = $_GET['tab'] ?? 'overview';
             <li class="nav-item <?= $active_tab == 'overview' ? 'active' : '' ?>"><a href="admin.php?tab=overview">📊 डैशबोर्ड ओवरव्यू</a></li>
             
             <!-- Game Management Group -->
-            <li class="nav-item <?= $active_tab == 'games' ? 'active' : '' ?>"><a href="admin.php?tab=games">🎮 गेम मैनेजमेंट</a></li>
+            <li class="nav-item <?= $active_tab == 'games' ? 'active' : '' ?>"><a href="games.php?tab=games">🎮 गेम मैनेजमेंट</a></li>
             <li class="nav-item <?= $active_tab == 'color_prediction' ? 'active' : '' ?>"><a href="admin.php?tab=color_prediction">🎯 कलर प्रेडिक्शन कंट्रोल</a></li>
             <li class="nav-item <?= $active_tab == 'aviator_control' ? 'active' : '' ?>"><a href="admin.php?tab=aviator_control">🚀 एविएटर / क्रैश गेम</a></li>
             <li class="nav-item <?= $active_tab == 'live_bets' ? 'active' : '' ?>"><a href="admin.php?tab=live_bets">🎲 लाइव बेट्स हिस्ट्री</a></li>

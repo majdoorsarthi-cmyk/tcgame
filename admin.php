@@ -23,7 +23,7 @@ mysqli_query($conn, "CREATE TABLE IF NOT EXISTS dynamic_pages (
 ) ENGINE=InnoDB;");
 
 // Ensure User Table Schema
-mysqli_query($conn, "ALTER TABLE users ADD COLUMN IF NOT EXISTS role ENUM('user', 'vip', 'moderator', 'admin') DEFAULT 'user';");
+mysqli_query($conn, "ALTER TABLE users ADD COLUMN role ENUM('user', 'vip', 'moderator', 'admin') DEFAULT 'user'");
 mysqli_query($conn, "ALTER TABLE users ADD COLUMN IF NOT EXISTS status ENUM('active', 'suspended', 'banned') DEFAULT 'active';");
 
 // --- 2. Helper Functions ---

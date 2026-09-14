@@ -5,7 +5,7 @@ require_once 'db.php';
 // Aiven SSL / MySQL Strict Primary Key bypass
 mysqli_query($conn, "SET SESSION sql_require_primary_key = 0;");
 
-// --- 1. Schema Builder (ऑटो डेटाबेस टेबल व कॉलम चेक) ---
+// --- 1. Schema Builder (ऑटो डेटाबेस टेबल व कॉलम चेक - Safe Mechanism) ---
 mysqli_query($conn, "CREATE TABLE IF NOT EXISTS site_settings (
     setting_key VARCHAR(50) PRIMARY KEY,
     setting_value TEXT
@@ -22,9 +22,17 @@ mysqli_query($conn, "CREATE TABLE IF NOT EXISTS dynamic_pages (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;");
 
-// Ensure User Table Schema
+// Safe Column Helper Functions (बिना एरर के कॉलम जोड़ने का सुरक्षित तरीका)
+function safeAddColumn($conn, $table, $column, $definition) {
+    $check = mysqli_query($conn, "SHOW COLUMNS FROM `$table` LIKE '$column'");
+    if (mysqli_num_rows($check) == 0) {
+        mysqli_query($conn, "ALTER TABLE `$table` ADD COLUMN `$column` $definition");
+    }
+}
 
-mysqli_query($conn, "ALTER TABLE users ADD COLUMN IF NOT EXISTS status ENUM('active', 'suspended', 'banned') DEFAULT 'active';");
+// Ensure User Table Schema (Fix for Line 26 & 27)
+safeAddColumn($conn, 'users', 'role', "ENUM('user', 'vip', 'moderator', 'admin') DEFAULT 'user'");
+safeAddColumn($conn, 'users', 'status', "ENUM('active', 'suspended', 'banned') DEFAULT 'active'");
 
 // --- 2. Helper Functions ---
 function getSetting($conn, $key, $default = '') {
@@ -538,18 +546,18 @@ $active_tab = $_GET['tab'] ?? 'overview';
                                     <b><?= htmlspecialchars($u['username']) ?></b><br>
                                     <small style="color:var(--text-muted);"><?= htmlspecialchars($u['upi_id'] ?? 'No UPI') ?></small>
                                 </td>
-                                <td><span class="badge badge-<?= $u['role'] ?>"><?= strtoupper($u['role']) ?></span></td>
-                                <td style="color:#10b981; font-weight:800;">₹<?= number_format($u['wallet_balance'], 2) ?></td>
-                                <td><span class="badge badge-<?= $u['status'] ?>"><?= ucfirst($u['status']) ?></span></td>
+                                <td><span class="badge badge-<?= $u['role'] ?? 'user' ?>"><?= strtoupper($u['role'] ?? 'USER') ?></span></td>
+                                <td style="color:#10b981; font-weight:800;">₹<?= number_format($u['wallet_balance'] ?? 0, 2) ?></td>
+                                <td><span class="badge badge-<?= $u['status'] ?? 'active' ?>"><?= ucfirst($u['status'] ?? 'active') ?></span></td>
                                 <td>
                                     <div style="display:flex; gap:4px; flex-wrap:wrap;">
-                                        <?php if ($u['status'] != 'active'): ?>
+                                        <?php if (($u['status'] ?? '') != 'active'): ?>
                                             <a href="admin.php?tab=users&user_action=activate&uid=<?= $u['id'] ?>" class="btn btn-success" style="padding:3px 7px; font-size:10px;">Activate ✅</a>
                                         <?php endif; ?>
-                                        <?php if ($u['status'] != 'suspended'): ?>
+                                        <?php if (($u['status'] ?? '') != 'suspended'): ?>
                                             <a href="admin.php?tab=users&user_action=suspend&uid=<?= $u['id'] ?>" class="btn btn-warning" style="padding:3px 7px; font-size:10px;">Suspend ⚠️</a>
                                         <?php endif; ?>
-                                        <?php if ($u['status'] != 'banned'): ?>
+                                        <?php if (($u['status'] ?? '') != 'banned'): ?>
                                             <a href="admin.php?tab=users&user_action=ban&uid=<?= $u['id'] ?>" class="btn btn-danger" style="padding:3px 7px; font-size:10px;">Ban 🚫</a>
                                         <?php endif; ?>
                                         <a href="admin.php?tab=users&user_action=delete&uid=<?= $u['id'] ?>" onclick="return confirm('स्थायी रूप से हटाएं?');" class="btn btn-danger" style="padding:3px 7px; font-size:10px; background:#450a0a;">Delete 🗑️</a>
@@ -559,10 +567,10 @@ $active_tab = $_GET['tab'] ?? 'overview';
                                         <input type="hidden" name="action" value="promote_user">
                                         <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
                                         <select name="role" class="form-control" style="padding:2px 4px; font-size:10px;">
-                                            <option value="user" <?= $u['role']=='user'?'selected':'' ?>>User</option>
-                                            <option value="vip" <?= $u['role']=='vip'?'selected':'' ?>>VIP</option>
-                                            <option value="moderator" <?= $u['role']=='moderator'?'selected':'' ?>>Moderator</option>
-                                            <option value="admin" <?= $u['role']=='admin'?'selected':'' ?>>Admin</option>
+                                            <option value="user" <?= ($u['role']??'')=='user'?'selected':'' ?>>User</option>
+                                            <option value="vip" <?= ($u['role']??'')=='vip'?'selected':'' ?>>VIP</option>
+                                            <option value="moderator" <?= ($u['role']??'')=='moderator'?'selected':'' ?>>Moderator</option>
+                                            <option value="admin" <?= ($u['role']??'')=='admin'?'selected':'' ?>>Admin</option>
                                         </select>
                                         <button type="submit" class="btn btn-primary" style="padding:2px 6px; font-size:10px;">Set</button>
                                     </form>
@@ -614,7 +622,7 @@ $active_tab = $_GET['tab'] ?? 'overview';
                                 <td>#<?= $w['id'] ?></td>
                                 <td><b>#<?= $w['user_id'] ?></b></td>
                                 <td style="color:#6366f1; font-weight:bold;">₹<?= $w['amount'] ?></td>
-                                <td><code><?= htmlspecialchars($w['upi_id']) ?></code></td>
+                                <td><code><?= htmlspecialchars($w['upi_id'] ?? '') ?></code></td>
                                 <td><?= $w['created_at'] ?></td>
                                 <td><span class="badge badge-<?= strtolower($w['status']) ?>"><?= $w['status'] ?></span></td>
                                 <td>

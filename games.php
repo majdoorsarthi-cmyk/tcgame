@@ -12,7 +12,7 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     exit;
 }
 
-// 2. Schema Builder (गेम्स टेबल ऑटो-क्रिएट सुरक्षित मैकेनिज्म)
+// 2. Schema Builder
 mysqli_query($conn, "CREATE TABLE IF NOT EXISTS platform_games (
     id INT AUTO_INCREMENT PRIMARY KEY,
     game_code VARCHAR(50) NOT NULL UNIQUE,
@@ -23,7 +23,7 @@ mysqli_query($conn, "CREATE TABLE IF NOT EXISTS platform_games (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;");
 
-// डिफ़ॉल्ट डेटा इंजेक्ट करें यदि टेबल खाली है
+// Default Data Injection
 $check_games = mysqli_query($conn, "SELECT COUNT(*) as cnt FROM platform_games");
 $count = mysqli_fetch_assoc($check_games)['cnt'] ?? 0;
 if ($count == 0) {
@@ -33,7 +33,7 @@ if ($count == 0) {
         ('andar_bahar', 'Andar Bahar', 'Casino', 'Maintenance', 3.00)");
 }
 
-// 3. Database Action Engine (डेटाबेस अपडेट रिस्पॉन्स)
+// 3. Database Action Engine
 $msg = "";
 $msg_type = "success";
 
@@ -51,18 +51,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_game'])) {
     }
 }
 
-// Sidebar Sync Variable (साइटबार में '🎮 गेम मैनेजमेंट' सक्रिय दिखाने के लिए)
 $active_tab = 'games';
-
-// Fetch Global Statistics for Sidebar & Stats Badge
-$pending_w = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as c FROM withdrawals WHERE status='Pending'"))['c'] ?? 0;
 ?>
 <!DOCTYPE html>
 <html lang="hi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Management & RTP Control - TC GAME</title>
+    <title>Game Management - TC GAME</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -79,6 +75,69 @@ $pending_w = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as c FROM w
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
         body { background: var(--bg-dark); color: var(--text-main); display: flex; min-height: 100vh; overflow-x: hidden; }
 
+        /* --- SIDEBAR STYLES --- */
+        .sidebar {
+            width: 260px;
+            background: rgba(13, 17, 26, 0.95);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .sidebar-brand {
+            padding: 24px;
+            font-size: 18px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-menu {
+            padding: 15px 10px;
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-menu a:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-menu a.active {
+            background: var(--primary-gradient);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* --- MAIN CONTENT STYLES --- */
         .main-content { flex: 1; padding: 32px; overflow-y: auto; }
         .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
         .page-title { font-size: 26px; font-weight: 800; }
@@ -119,9 +178,36 @@ $pending_w = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as c FROM w
 </head>
 <body>
 
-    <!-- Dynamic Sidebar Sync Include -->
-    <?php include 'sidebar.php'; ?>
+    <!-- SIDEBAR -->
+    <?php if (file_exists('sidebar.php')) { 
+        include 'sidebar.php'; 
+    } else { ?>
+    <div class="sidebar">
+        <div class="sidebar-brand">⚡ TC GAME MASTER</div>
+        <div class="sidebar-menu">
+            <a href="admin.php?tab=overview">📊 डैशबोर्ड ओवरव्यू</a>
+            <a href="games.php" class="active">🎮 गेम मैनेजमेंट</a>
+            <a href="admin.php?tab=color">🎯 कलर प्रेडिक्शन कंट्रोल</a>
+            <a href="admin.php?tab=aviator">🚀 एविएटर / क्रैश गेम</a>
+            <a href="admin.php?tab=bets">🎲 लाइव बेट्स हिस्ट्री</a>
+            <a href="admin.php?tab=jackpot">🏆 जैकपॉट & रिवॉर्ड्स</a>
+            <a href="admin.php?tab=users">👥 यूज़र कंट्रोल & वॉलेट</a>
+            <a href="admin.php?tab=withdrawals">💳 विथड्रॉल</a>
+            <a href="admin.php?tab=deposits">💰 डिपाज़िट अप्रूवल</a>
+            <a href="admin.php?tab=transactions">📜 सभी ट्रांजेक्शन लॉग्स</a>
+            <a href="admin.php?tab=gateways">💳 पेमेंट गेटवे सेटिंग्स</a>
+            <a href="admin.php?tab=coupons">🎁 बोनस & कूपन कोड</a>
+            <a href="admin.php?tab=vip">⭐ वीआईपी लेवल्स</a>
+        </div>
+        <div class="sidebar-footer">
+            <div style="font-size: 12px; font-weight: 700;">admin</div>
+            <div style="font-size: 10px; color: var(--text-muted);">Super Admin</div>
+            <a href="logout.php" style="color: #ef4444; text-decoration: none; font-size: 12px; display: block; margin-top: 5px;">Exit 🔒</a>
+        </div>
+    </div>
+    <?php } ?>
 
+    <!-- MAIN CONTENT -->
     <div class="main-content">
         
         <div class="header-bar">

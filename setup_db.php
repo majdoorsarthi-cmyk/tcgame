@@ -4,7 +4,7 @@ $host = "mysql-9d9cc53-majdoorsarthi-d1a8.k.aivencloud.com";
 $port = 13848;
 $username = "avnadmin";
 $password = "AVNS_CXh977fYw0GUSdyTCUU";
-$dbname = "defaultdb";
+$dbname = "tcgame"; // Target Database: tcgame
 
 // Connection error report disable for custom handling
 mysqli_report(MYSQLI_REPORT_OFF);
@@ -20,7 +20,7 @@ if (!@mysqli_real_connect($conn, $host, $username, $password, $dbname, $port, NU
 mysqli_query($conn, "SET SESSION sql_require_primary_key = 0;");
 
 echo "<div style='font-family: system-ui, sans-serif; padding: 25px; background: #0f172a; color: #f8fafc; min-height: 100vh; line-height: 1.6;'>";
-echo "<h2 style='color: #38bdf8; margin-bottom: 20px;'>🚀 Advanced Gaming & MLM Database Setup (Auto-Healing Enabled)</h2>";
+echo "<h2 style='color: #38bdf8; margin-bottom: 20px;'>🚀 Advanced Gaming & MLM Database Setup (Target: tcgame)</h2>";
 
 // 1. Helper Function: Auto-add missing columns to existing tables
 function addColumnIfNotExists($conn, $table, $column, $columnDef) {
@@ -126,14 +126,14 @@ $tables = [
 // Execute Table Creation
 foreach ($tables as $name => $query) {
     if (mysqli_query($conn, $query)) {
-        echo "<p style='color: #4ade80;'>✅ Table <b>{$name}</b> verified/created successfully.</p>";
+        echo "<p style='color: #4ade80;'>✅ Table <b>{$name}</b> created / verified successfully in <i>tcgame</i>.</p>";
     } else {
         echo "<p style='color: #f87171;'>❌ Error creating table <b>{$name}</b>: " . mysqli_error($conn) . "</p>";
     }
 }
 
 echo "<hr style='border-color: #334155; margin: 20px 0;'>";
-echo "<h3 style='color: #facc15;'>🔄 Auto-Healing Old Tables (Adding Missing Columns)</h3>";
+echo "<h3 style='color: #facc15;'>🔄 Auto-Healing Columns</h3>";
 
 // Repair 'users' table columns
 addColumnIfNotExists($conn, 'users', 'username', "VARCHAR(50) NOT NULL AFTER id");
@@ -167,7 +167,7 @@ if ($check_q && mysqli_num_rows($check_q) == 0) {
     ('विश्व की सबसे लंबी नदी कौन सी है?', 'अमेजन', 'नील', 'गंगा', 'मिसिसिपी', 'B', 'GK'),
     ('सूर्य क्या है?', 'ग्रह', 'तारा', 'उपग्रह', 'उल्कापिंड', 'B', 'Science')";
     if (mysqli_query($conn, $q_stmt)) {
-        echo "<p style='color: #facc15;'>⚡ Sample questions inserted.</p>";
+        echo "<p style='color: #facc15;'>⚡ Sample questions inserted into tcgame.</p>";
     }
 } else {
     echo "<p style='color: #94a3b8;'>ℹ️ Questions table already has data.</p>";
@@ -180,7 +180,7 @@ if ($check_c && mysqli_num_rows($check_c) == 0) {
     ('Mega Skill Tournament', 100.00, 50.00, 30.00, 13.00, 7.00, 'active'),
     ('Rapid Cash Quiz', 20.00, 10.00, 6.00, 2.60, 1.40, 'active')";
     if (mysqli_query($conn, $c_stmt)) {
-        echo "<p style='color: #facc15;'>⚡ Sample contests with Admin & MLM profit split inserted.</p>";
+        echo "<p style='color: #facc15;'>⚡ Sample contests with Admin & MLM profit split inserted into tcgame.</p>";
     }
 } else {
     echo "<p style='color: #94a3b8;'>ℹ️ Contests table already has data.</p>";
@@ -190,7 +190,7 @@ mysqli_close($conn);
 
 echo "<div style='margin-top: 30px; padding: 15px; background: #1e293b; border-radius: 8px; border: 1px solid #3b82f6;'>";
 echo "<h3 style='color: #38bdf8; margin: 0 0 10px 0;'>🎉 Setup Complete!</h3>";
-echo "<p style='margin: 0;'>All tables created, auto-repaired, and verified. You can now refresh <b>admin.php</b>!</p>";
+echo "<p style='margin: 0;'>All 8 gaming tables created inside <b>tcgame</b> database. DBeaver refresh karein aur <b>admin.php</b> check karein!</p>";
 echo "</div>";
 echo "</div>";
 ?>

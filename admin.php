@@ -365,7 +365,7 @@ $active_tab = $_GET['tab'] ?? 'overview';
     <!-- Sidebar Component -->
     <div class="sidebar">
         <div>
-            <div class="sidebar-brand">⚡ MASTER ENGINE</div>
+            <div class="sidebar-brand">TCGAME CONTROL ROOM</div>
             <ul class="nav-menu">
                 <li class="nav-item <?= $active_tab == 'overview' ? 'active' : '' ?>"><a href="admin.php?tab=overview">📊 डैशबोर्ड ओवरव्यू</a></li>
                 <li class="nav-item <?= $active_tab == 'pages' ? 'active' : '' ?>"><a href="admin.php?tab=pages">🌐 Dynamic Pages</a></li>
